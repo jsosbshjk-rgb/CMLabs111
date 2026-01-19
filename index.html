@@ -579,107 +579,87 @@
         </section>
     </main>
 
-    <script>
-    let cart = [];
-
-    function loadCart() {
-        const saved = localStorage.getItem('cmlabs_cart');
-        if (saved) {
-            cart = JSON.parse(saved);
-            updateCart();
+       <script>
+        let cart = [];
+        function loadCart() {
+            const saved = localStorage.getItem('cmlabs_cart');
+            if (saved) {
+                cart = JSON.parse(saved);
+                updateCart();
+            }
         }
-    }
-
-    function saveCart() {
-        localStorage.setItem('cmlabs_cart', JSON.stringify(cart));
-    }
-
-    function changeQty(btn, delta) {
-        const display = btn.parentElement.querySelector('.quantity-display');
-        let val = parseInt(display.textContent) || 0;
-        val = Math.max(0, val + delta);
-        display.textContent = val;
-    }
-
-    function addToCart(btn) {
-        const product = btn.closest('.product');
-        const qtyEl = product.querySelector('.quantity-display');
-        const qty = parseInt(qtyEl.textContent) || 0;
-        if (qty <= 0) return;
-
-        const name = product.querySelector('h3').textContent.trim();
-        const priceStr = product.querySelector('.price').textContent.replace(/[^0-9]/g,'');
-        const price = parseInt(priceStr) || 0;
-
-        const existing = cart.find(item => item.name === name);
-        if (existing) {
-            existing.quantity += qty;
-        } else {
-            cart.push({ name, price, quantity: qty });
+        function saveCart() {
+            localStorage.setItem('cmlabs_cart', JSON.stringify(cart));
         }
-
-        qtyEl.textContent = '0';
-        updateCart();
-        saveCart();
-    }
-
-    function updateCart() {
-        const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
-        const totalSum = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-        const bar = document.getElementById('cart-bar');
-        document.getElementById('cart-count').textContent = totalQty;
-        document.getElementById('cart-total').textContent = '₴ ' + totalSum.toLocaleString('uk-UA');
-
-        const showBar = totalQty > 0;
-        bar.style.display = showBar ? 'flex' : 'none';
-        document.getElementById('clear-cart-btn').style.display = showBar ? 'inline-block' : 'none';
-    }
-
-    function clearCart() {
-        if (confirm("Очистити кошик? Усі товари буде видалено.")) {
-            cart = [];
+        function changeQty(btn, delta) {
+            const display = btn.parentElement.querySelector('.quantity-display');
+            let val = parseInt(display.textContent) || 0;
+            val = Math.max(0, val + delta);
+            display.textContent = val;
+        }
+        function addToCart(btn) {
+            const product = btn.closest('.product');
+            const qtyEl = product.querySelector('.quantity-display');
+            const qty = parseInt(qtyEl.textContent) || 0;
+            if (qty <= 0) return;
+            const name = product.querySelector('h3').textContent.trim();
+            const priceStr = product.querySelector('.price').textContent.replace(/[^0-9]/g,'');
+            const price = parseInt(priceStr) || 0;
+            const existing = cart.find(item => item.name === name);
+            if (existing) {
+                existing.quantity += qty;
+            } else {
+                cart.push({ name, price, quantity: qty });
+            }
+            qtyEl.textContent = '0';
             updateCart();
             saveCart();
         }
-    }
-
-    function orderCart() {
-        if (cart.length === 0) return;
-
-        let msg = "Хочу купити:\n\n";
-
-        cart.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            msg += `• ${item.name} × ${item.quantity} шт — ₴ ${itemTotal.toLocaleString('uk-UA')}\n`;
-        });
-
-        const grandTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        msg += `\nЗагальна сума: ₴ ${grandTotal.toLocaleString('uk-UA')}`;
-
-        const encoded = encodeURIComponent(msg);
-        window.location.href = `viber://chat?number=%2B380681043408&text=${encoded}`;
-    }
-
-    function toggleSubGallery(id) {
-        document.getElementById(id).classList.toggle('active');
-    }
-
-    function show(id) {
-        document.querySelectorAll('section').forEach(el => el.style.display = 'none');
-        document.getElementById(id).style.display = 'block';
-        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-
-    if (window.innerWidth <= 768) {
-        const logo = document.querySelector('.logo');
-        window.addEventListener('scroll', () => {
-            logo.classList.toggle('scrolled', window.scrollY > 140);
-        });
-    }
-
-    window.addEventListener('load', loadCart);
-</script>
+        function updateCart() {
+            const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalSum = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const bar = document.getElementById('cart-bar');
+            document.getElementById('cart-count').textContent = totalQty;
+            document.getElementById('cart-total').textContent = '₴ ' + totalSum.toLocaleString('uk-UA');
+            const showBar = totalQty > 0;
+            bar.style.display = showBar ? 'flex' : 'none';
+            document.getElementById('clear-cart-btn').style.display = showBar ? 'inline-block' : 'none';
+        }
+        function clearCart() {
+            if (confirm("Очистити кошик? Усі товари буде видалено.")) {
+                cart = [];
+                updateCart();
+                saveCart();
+            }
+        }
+        function orderCart() {
+            if (cart.length === 0) return;
+            let msg = "Хочу замовити:\n\n";
+            cart.forEach(item => {
+                msg += `• ${item.name} × ${item.quantity} шт — ₴ ${item.price * item.quantity}\n`;
+            });
+            msg += `\nЗагальна сума: ₴ ${cart.reduce((s,i)=>s + i.price * i.quantity,0)}`;
+            const encoded = encodeURIComponent(msg);
+            window.location.href = `viber://chat?number=%2B380681043408&text=${encoded}`;
+        }
+        function toggleSubGallery(id) {
+            document.getElementById(id).classList.toggle('active');
+        }
+        function show(id) {
+            document.querySelectorAll('section').forEach(el => el.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        if (window.innerWidth <= 768) {
+            const logo = document.querySelector('.logo');
+            window.addEventListener('scroll', () => {
+                logo.classList.toggle('scrolled', window.scrollY > 140);
+            });
+        }
+        window.addEventListener('load', loadCart);
+    </script>
 </body>
 </html>
+</html>
+
