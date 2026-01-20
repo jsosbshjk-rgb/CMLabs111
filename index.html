@@ -290,7 +290,7 @@
                             <button class="product-btn" onclick="addToCart(this)">Додати в кошик</button>
                         </div>
                         <div class="product" data-name="Набір кавомана JURA / KRUPS" data-price="3100">
-                            <img src="https://uploads.onecompiler.io/44as4qwkq/44as44gm7/%D0%9D%D0%B0%D0%B1%D1%96%D1%80%20%D0%BA%D0%B0%D0%B2%D0%BE%D0%BC%D0%B0%D0%BD%D0%B0%20JURA%20KRUPS.png" alt="Набір кавомана">
+                            <img src="https://uploads.onecompiler.io/44as4qwkq/44as44gm7/%D0%9D%D0%B0%D0%B1%D1%96%D0%BE%20%D0%BA%D0%B0%D0%B2%D0%BE%D0%BC%D0%B0%D0%BD%D0%B0%20JURA%20KRUPS.png" alt="Набір кавомана">
                             <h3>Набір кавомана JURA / KRUPS</h3>
                             <p>Комплектація на 1–1,5 роки:</p>
                             <ul style="list-style:none;padding:0 0.8rem;font-size:0.98rem;margin:0.4rem 0;">
@@ -615,7 +615,7 @@
             document.querySelectorAll('section').forEach(el => el.style.display = 'none');
             document.getElementById(id).style.display = 'block';
             document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
         }
         if (window.innerWidth <= 768) {
             const logo = document.querySelector('.logo');
@@ -626,4 +626,3 @@
         window.addEventListener('load', loadCart);
     </script>
 </body>
-</html>
