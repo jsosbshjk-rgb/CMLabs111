@@ -599,15 +599,27 @@
             }
         }
         function orderCart() {
-            if (cart.length === 0) return;
-            let msg = "Хочу замовити:\n\n";
-            cart.forEach(item => {
-                msg += `• ${item.name} × ${item.quantity} шт — ₴ ${item.price * item.quantity}\n`;
-            });
-            msg += `\nЗагальна сума: ₴ ${cart.reduce((s,i)=>s + i.price * i.quantity,0)}`;
-            const encoded = encodeURIComponent(msg);
-            window.location.href = `viber://chat?number=%2B380681043408&text=${encoded}`;
+    if (cart.length === 0) return;
+
+    let msg = "Хочу замовити:\n\n";
+    cart.forEach(item => {
+        msg += `• ${item.name} × ${item.quantity} шт — ₴ ${item.price * item.quantity}\n`;
+    });
+    msg += `\nЗагальна сума: ₴ ${cart.reduce((s,i)=>s + i.price * i.quantity,0)}`;
+
+    const encoded = encodeURIComponent(msg);
+    const viberLink = `viber://chat?number=%2B380681043408&text=${encoded}`;
+
+    // Спробувати відкрити Viber
+    window.location.href = viberLink;
+
+    // Якщо через 2 секунди сторінка не змінилася — показати текст
+    setTimeout(() => {
+        if (!document.hidden) {
+            alert("Не вдалося відкрити Viber автоматично.\nСкопіюйте текст і надішліть вручну:\n\n" + msg);
         }
+    }, 2000);
+}
         function toggleSubGallery(id) {
             document.getElementById(id).classList.toggle('active');
         }
