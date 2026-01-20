@@ -546,95 +546,28 @@
 
     <!-- Оновлений скрипт (замінено повністю) -->
     <script>
-        let cart = [];
-        function loadCart() {
-            const saved = localStorage.getItem('cmlabs_cart');
-            if (saved) {
-                cart = JSON.parse(saved);
-                updateCart();
-            }
-        }
-        function saveCart() {
-            localStorage.setItem('cmlabs_cart', JSON.stringify(cart));
-        }
-        function changeQty(btn, delta) {
-            const display = btn.parentElement.querySelector('.quantity-display');
-            let val = parseInt(display.textContent) || 0;
-            val = Math.max(0, val + delta);
-            display.textContent = val;
-        }
-        function addToCart(btn) {
-            const product = btn.closest('.product');
-            const qtyEl = product.querySelector('.quantity-display');
-            const qty = parseInt(qtyEl.textContent) || 0;
-            if (qty <= 0) return;
-            const name = product.querySelector('h3').textContent.trim();
-            const priceStr = product.querySelector('.price').textContent.replace(/[^0-9]/g,'');
-            const price = parseInt(priceStr) || 0;
-            const existing = cart.find(item => item.name === name);
-            if (existing) {
-                existing.quantity += qty;
-            } else {
-                cart.push({ name, price, quantity: qty });
-            }
-            qtyEl.textContent = '0';
-            updateCart();
-            saveCart();
-        }
-        function updateCart() {
-            const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const totalSum = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            const bar = document.getElementById('cart-bar');
-            document.getElementById('cart-count').textContent = totalQty;
-            document.getElementById('cart-total').textContent = '₴ ' + totalSum.toLocaleString('uk-UA');
-            const showBar = totalQty > 0;
-            bar.style.display = showBar ? 'flex' : 'none';
-            document.getElementById('clear-cart-btn').style.display = showBar ? 'inline-block' : 'none';
-        }
-        function clearCart() {
-            if (confirm("Очистити кошик? Усі товари буде видалено.")) {
-                cart = [];
-                updateCart();
-                saveCart();
-            }
-        }
-        function orderCart() {
-    if (cart.length === 0) return;
-
-    let msg = "Хочу замовити:\n\n";
-    cart.forEach(item => {
-        msg += `• ${item.name} × ${item.quantity} шт — ₴ ${item.price * item.quantity}\n`;
-    });
-    msg += `\nЗагальна сума: ₴ ${cart.reduce((s,i)=>s + i.price * i.quantity,0)}`;
-
-    const encoded = encodeURIComponent(msg);
-    const viberLink = `viber://chat?number=%2B380681043408&text=${encoded}`;
-
-    // Спробувати відкрити Viber
-    window.location.href = viberLink;
-
-    // Якщо через 2 секунди сторінка не змінилася — показати текст
-    setTimeout(() => {
-        if (!document.hidden) {
-            alert("Не вдалося відкрити Viber автоматично.\nСкопіюйте текст і надішліть вручну:\n\n" + msg);
-        }
-    }, 2000);
-}
-        function toggleSubGallery(id) {
-            document.getElementById(id).classList.toggle('active');
-        }
-        function show(id) {
-            document.querySelectorAll('section').forEach(el => el.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
-        if (window.innerWidth <= 768) {
-            const logo = document.querySelector('.logo');
-            window.addEventListener('scroll', () => {
-                logo.classList.toggle('scrolled', window.scrollY > 140);
-            });
-        }
-        window.addEventListener('load', loadCart);
-    </script>
+let cart=[];
+const $=s=>document.querySelector(s);
+const loadCart=()=>{let s=localStorage.getItem('cmlabs_cart');if(s){cart=JSON.parse(s);updateCart()}};
+const saveCart=()=>localStorage.setItem('cmlabs_cart',JSON.stringify(cart));
+const changeQty=(btn,delta)=>{let el=btn.parentNode.querySelector('.quantity-display');el.textContent=Math.max(0,(+el.textContent||0)+delta)};
+const addToCart=(btn)=>{let p=btn.closest('.product'),qty=+p.querySelector('.quantity-display').textContent||0;if(qty<1)return;let name=p.querySelector('h3').textContent.trim(),price=+p.querySelector('.price').textContent.replace(/\D/g,'')||0;let ex=cart.find(i=>i.name===name);ex?ex.quantity+=qty:cart.push({name,price,quantity:qty});p.querySelector('.quantity-display').textContent=0;updateCart();saveCart()};
+const updateCart=()=>{let q=cart.reduce((a,i)=>a+i.quantity,0),sum=cart.reduce((a,i)=>a+i.price*i.quantity,0);$('#cart-count').textContent=q;$('#cart-total').textContent='₴ '+sum.toLocaleString('uk-UA');let bar=$('#cart-bar');bar.style.display=q?'flex':'none';$('#clear-cart-btn').style.display=q?'inline-block':'none'};
+const clearCart=()=>{if(confirm('Очистити кошик?')){cart=[];updateCart();saveCart()}};
+const orderCart=()=>{
+  if(!cart.length)return;
+  let msg='Хочу замовити:\n\n';
+  cart.forEach(i=>msg+=`• ${i.name} × ${i.quantity} шт — ₴ ${i.price*i.quantity}\n`);
+  msg+=`\nЗагальна сума: ₴ ${cart.reduce((a,i)=>a+i.price*i.quantity,0)}`;
+  const enc=encodeURIComponent(msg);
+  location.href=`viber://chat?number=%2B380681043408&text=${enc}`;
+  setTimeout(()=>{
+    if(document.visibilityState==='visible') alert(`Не вдалося відкрити Viber.\n\nСкопіюйте:\n\n${msg}`);
+  },2000);
+};
+const toggleSubGallery=id=>$('#'+id).classList.toggle('active');
+const show=section=>{document.querySelectorAll('section').forEach(s=>s.style.display='none');$('#'+section).style.display='block';document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));event.currentTarget.classList.add('active')};
+innerWidth<=768&&addEventListener('scroll',()=>$('.logo').classList.toggle('scrolled',scrollY>140));
+addEventListener('load',loadCart);
+</script>
 </body>
