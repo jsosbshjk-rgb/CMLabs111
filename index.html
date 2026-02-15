@@ -402,10 +402,69 @@
 </table>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4ysKO8HVgdPJZiB7qlJxK1GGF9yRRDWFD7O_bL0r3IjSX5tXaAFDAbeU-IYcFA0jH/exec'; // встав сюди URL з Apps Script
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4ysKO8HVgdPJZiB7qlJxK1GGF9yRRDWFD7O_bL0r3IjSX5tXaAFDAbeU-IYcFA0jH/exec';
+
+// Функція перерахунку рядка
+function updateRow() {
+  const row = this.closest('tr');
+  if (!row) return;
+
+  const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
+  const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+  const qty = parseFloat(row.querySelector('.qty').value) || 0;
+
+  row.querySelector('.profit').textContent = ((price - cost) * qty).toFixed(2);
+  calculateTotal();
+  saveData(); // зберігаємо в Google Sheets
+}
+
+// Підсумок по всій таблиці
+function calculateTotal() {
+  let sum = 0;
+  document.querySelectorAll('.profit').forEach(el => {
+    sum += parseFloat(el.textContent) || 0;
+  });
+  document.getElementById('netProfit').textContent = sum.toFixed(2) + ' ₴';
+}
+
+// Збереження в Google Sheets
+async function saveData() {
+  const date = document.getElementById('orderDate').value;
+  document.querySelectorAll('tbody tr[data-id]').forEach(async row => {
+    const id = row.getAttribute('data-id');
+    const cost = row.querySelector('.cost-input').value || '0';
+    const qty = row.querySelector('.qty').value || '0';
+    const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
+    const profit = ((price - parseFloat(cost)) * parseFloat(qty)).toFixed(2);
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'save',
+          date,
+          id,
+          name: row.querySelector('td:nth-child(2)').textContent.trim(),
+          price,
+          cost,
+          qty,
+          profit
+        })
+      });
+    } catch (e) {
+      console.error('Помилка збереження:', e);
+    }
+  });
+  calculateTotal();
+}
 
 // Завантаження даних при старті
 window.addEventListener('load', async () => {
+  // Спочатку встановлюємо сьогоднішню дату, якщо немає збереженої
+  if (!document.getElementById('orderDate').value) {
+    document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+  }
+
   try {
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -413,7 +472,6 @@ window.addEventListener('load', async () => {
     });
     const data = await response.json();
 
-    // Заповнюємо таблицю
     data.forEach(item => {
       const row = document.querySelector(`tr[data-id="${item.id}"]`);
       if (row) {
@@ -431,44 +489,13 @@ window.addEventListener('load', async () => {
   }
 });
 
-// Збереження при зміні
-async function saveData() {
-  const date = document.getElementById('orderDate').value;
-  document.querySelectorAll('tbody tr[data-id]').forEach(async row => {
-    const id = row.getAttribute('data-id');
-    const cost = row.querySelector('.cost-input').value || '0';
-    const qty = row.querySelector('.qty').value || '0';
-    const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
-    const profit = ((price - parseFloat(cost)) * parseFloat(qty)).toFixed(2);
-
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'save',
-        date,
-        id,
-        name: row.querySelector('td:nth-child(2)').textContent.trim(),
-        price,
-        cost,
-        qty,
-        profit
-      })
-    });
-  });
-  calculateTotal();
-}
-
-// Прив'язка подій
+// Прив'язка подій до всіх полів
 document.querySelectorAll('.qty, .cost-input').forEach(input => {
-  input.addEventListener('input', () => {
-    updateRow.call(input);
-    saveData();
-  });
+  input.addEventListener('input', updateRow);
+  input.addEventListener('change', updateRow);
 });
 
 document.getElementById('orderDate').addEventListener('change', saveData);
-
-// решта функцій (updateRow, calculateTotal) залишаються без змін
 </script>
 
 </body>
