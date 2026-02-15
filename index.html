@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="uk">
+  <button onclick="saveTemplate()" style="margin-left:15px; padding:8px 16px; background:#d4af37; color:#000; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+  Зберегти як шаблон 
+</button>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -399,84 +402,73 @@
 </table>
 
 <script>
-// ────────────────────────────────────────────────
-// Збереження та відновлення даних
-// ────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4ysKO8HVgdPJZiB7qlJxK1GGF9yRRDWFD7O_bL0r3IjSX5tXaAFDAbeU-IYcFA0jH/exec'; // встав сюди URL з Apps Script
 
-const STORAGE_KEY = 'cm-labs-order-table-data';
-const DATE_KEY = 'cm-labs-order-date';
+// Завантаження даних при старті
+window.addEventListener('load', async () => {
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'load' })
+    });
+    const data = await response.json();
 
-// Завантаження збережених даних при старті
-window.addEventListener('load', () => {
-    // Дата
-    const savedDate = localStorage.getItem(DATE_KEY);
-    if (savedDate) {
-        document.getElementById('orderDate').value = savedDate;
-    } else {
-        document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    // Таблиця
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
-            const id = row.getAttribute('data-id');
-            if (data[id]) {
-                row.querySelector('.cost-input').value = data[id].cost || 0;
-                row.querySelector('.qty').value = data[id].qty || 0;
-
-                // перерахунок рядка
-                const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
-                const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
-                const qty = parseFloat(row.querySelector('.qty').value) || 0;
-                row.querySelector('.profit').textContent = ((price - cost) * qty).toFixed(2);
-            }
-        });
-        calculateTotal();
-    }
+    // Заповнюємо таблицю
+    data.forEach(item => {
+      const row = document.querySelector(`tr[data-id="${item.id}"]`);
+      if (row) {
+        row.querySelector('.cost-input').value = item.cost || 0;
+        row.querySelector('.qty').value = item.qty || 0;
+        const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
+        const cost = parseFloat(item.cost) || 0;
+        const qty = parseFloat(item.qty) || 0;
+        row.querySelector('.profit').textContent = ((price - cost) * qty).toFixed(2);
+      }
+    });
+    calculateTotal();
+  } catch (e) {
+    console.error('Помилка завантаження:', e);
+  }
 });
 
 // Збереження при зміні
-function saveData() {
-    const data = {};
-    document.querySelectorAll('tbody tr[data-id]').forEach(row => {
-        const id = row.getAttribute('data-id');
-        data[id] = {
-            cost: row.querySelector('.cost-input').value || '0',
-            qty: row.querySelector('.qty').value || '0'
-        };
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-    // дата
-    localStorage.setItem(DATE_KEY, document.getElementById('orderDate').value);
-}
-
-function updateRow() {
-    const row = this.closest('tr');
+async function saveData() {
+  const date = document.getElementById('orderDate').value;
+  document.querySelectorAll('tbody tr[data-id]').forEach(async row => {
+    const id = row.getAttribute('data-id');
+    const cost = row.querySelector('.cost-input').value || '0';
+    const qty = row.querySelector('.qty').value || '0';
     const price = parseFloat(row.querySelector('[data-price]').getAttribute('data-price')) || 0;
-    const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
-    const qty = parseFloat(row.querySelector('.qty').value) || 0;
-    row.querySelector('.profit').textContent = ((price - cost) * qty).toFixed(2);
-    calculateTotal();
-    saveData();
-}
+    const profit = ((price - parseFloat(cost)) * parseFloat(qty)).toFixed(2);
 
-function calculateTotal() {
-    let sum = 0;
-    document.querySelectorAll('.profit').forEach(el => {
-        sum += parseFloat(el.textContent) || 0;
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'save',
+        date,
+        id,
+        name: row.querySelector('td:nth-child(2)').textContent.trim(),
+        price,
+        cost,
+        qty,
+        profit
+      })
     });
-    document.getElementById('netProfit').textContent = sum.toFixed(2) + ' ₴';
+  });
+  calculateTotal();
 }
 
 // Прив'язка подій
 document.querySelectorAll('.qty, .cost-input').forEach(input => {
-    input.addEventListener('input', updateRow);
-    input.addEventListener('change', updateRow);
+  input.addEventListener('input', () => {
+    updateRow.call(input);
+    saveData();
+  });
 });
+
 document.getElementById('orderDate').addEventListener('change', saveData);
+
+// решта функцій (updateRow, calculateTotal) залишаються без змін
 </script>
 
 </body>
